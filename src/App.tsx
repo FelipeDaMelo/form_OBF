@@ -140,7 +140,7 @@ const exportarCSV = async () => {
     });
   });
 
-  const csvHeader = 'Nome;Email;Série;Data de Nascimento';
+  const csvHeader = 'Nome;Email;Serie;Data de Nascimento';
   const csvBody = dados.map(d =>
     `${d.Nome};${d.Email};${d.Série};${d['Data de Nascimento']}`
   );
