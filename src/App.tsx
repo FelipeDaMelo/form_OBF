@@ -123,12 +123,13 @@ const exportarCSV = async () => {
   type DadoAluno = {
     Nome: string;
     Email: string;
-    'Série': string;
+    Série: string;
     'Data de Nascimento': string;
   };
 
   const dados: DadoAluno[] = [];
   const querySnapshot = await getAllDocs(collection(db, 'respostasFormulario'));
+
   querySnapshot.forEach((doc) => {
     const data = doc.data();
     dados.push({
@@ -139,12 +140,13 @@ const exportarCSV = async () => {
     });
   });
 
-  const cabecalho = ['"Nome"', '"Email"', '"Série"', '"Data de Nascimento"'];
-  const linhas = dados.map((d) =>
-    [`"${d.Nome}"`, `"${d.Email}"`, `"${d.Série}"`, `"${d['Data de Nascimento']}"`].join(',')
+  const csvHeader = 'Nome;Email;Série;Data de Nascimento';
+  const csvBody = dados.map(d =>
+    `${d.Nome};${d.Email};${d.Série};${d['Data de Nascimento']}`
   );
 
-  const csvContent = 'data:text/csv;charset=utf-8,' + [cabecalho.join(','), ...linhas].join('\r\n');
+  const csvContent = 'data:text/csv;charset=utf-8,' + [csvHeader, ...csvBody].join('\n');
+
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);
