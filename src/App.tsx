@@ -6,7 +6,9 @@ import {
   where,
   getDocs,
   addDoc,
-  getDocs as getAllDocs
+  getDocs as getAllDocs,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 
 function App() {
@@ -19,24 +21,22 @@ function App() {
 
   const buscarAluno = async () => {
     try {
-      const q = query(collection(db, 'alunos'), where('matricula', '==', matricula));
-      const querySnapshot = await getDocs(q);
+      const docRef = doc(db, 'alunos', matricula);
+      const docSnap = await getDoc(docRef);
 
-      if (querySnapshot.empty) {
+      if (!docSnap.exists()) {
         setErro('Matrícula não encontrada.');
         setNome('');
         setSerie('');
         return;
       }
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        setNome(data.nome);
-        setSerie(data.serie);
-        setErro('');
-      });
+      const data = docSnap.data();
+      setNome(data.nome);
+      setSerie(data.serie);
+      setErro('');
     } catch (err) {
-      console.error(err);
+      console.error('Erro Firebase:', err);
       setErro('Erro ao buscar dados.');
     }
   };
@@ -50,7 +50,19 @@ function App() {
 
   const salvarFormulario = async () => {
     try {
-      const email = \`\${matricula}@maristabrasil.g12.br\`;
+      const email = `${matricula}@maristabrasil.g12.br`;
+
+      const q = query(
+        collection(db, 'respostasFormulario'),
+        where('matricula', '==', matricula)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        setMensagem('Você já respondeu este formulário.');
+        return;
+      }
+
       await addDoc(collection(db, 'respostasFormulario'), {
         matricula,
         nome,
@@ -59,6 +71,7 @@ function App() {
         email,
         timestamp: new Date()
       });
+
       setMensagem('Dados salvos com sucesso!');
     } catch (err) {
       console.error(err);
@@ -67,15 +80,22 @@ function App() {
   };
 
   const exportarCSV = async () => {
+    type DadoAluno = {
+      Nome: string;
+      Email: string;
+      'Série': string;
+      'Data de Nascimento': string;
+    };
+
+    const dados: DadoAluno[] = [];
     const querySnapshot = await getAllDocs(collection(db, 'respostasFormulario'));
-    const dados = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       dados.push({
         Nome: data.nome,
         Email: data.email,
         Série: data.serie,
-        'Data de Nascimento': data.dataNascimento
+        'Data de Nascimento': data.dataNascimento,
       });
     });
 
@@ -85,7 +105,7 @@ function App() {
         .concat(
           dados.map((d) =>
             [d.Nome, d.Email, d['Série'], d['Data de Nascimento']]
-              .map((x) => \`"\${x}"\`)
+              .map((x) => `"${x}"`)
               .join(',')
           )
         )
@@ -101,43 +121,164 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '500px', margin: 'auto' }}>
-      <h1>Formulário de Aluno</h1>
-      <input
-        type="text"
-        placeholder="Número de matrícula"
-        value={matricula}
-        onChange={(e) => setMatricula(e.target.value)}
-        style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-      />
-      <button onClick={buscarAluno} style={{ marginBottom: '10px' }}>
-        Buscar
-      </button>
-      {erro && <p style={{ color: 'red' }}>{erro}</p>}
-      {nome && (
-        <div style={{ marginBottom: '10px' }}>
-          <p><strong>Nome:</strong> {nome}</p>
-          <p><strong>Série:</strong> {serie}</p>
-        </div>
-      )}
-      <input
-        type="text"
-        placeholder="Data de nascimento (DD/MM/AAAA)"
-        value={dataNascimento}
-        onChange={formatarData}
-        maxLength={10}
-        style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-      />
-      <button onClick={salvarFormulario} style={{ marginBottom: '10px' }}>
-        Salvar
-      </button>
-      {mensagem && <p style={{ color: 'green' }}>{mensagem}</p>}
-      {matricula === '200291' && (
-        <button onClick={exportarCSV} style={{ marginTop: '20px' }}>
-          Exportar para Excel
+    <>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '1rem 2rem 0',
+        maxWidth: '480px',
+        margin: '0 auto'
+      }}>
+        <img src="/logo-marista.png" alt="Logo Marista" style={{ height: '60px' }} />
+        <img src="/obf_t.png" alt="Logo OBF" style={{ height: '60px' }} />
+      </div>
+
+      <div style={{
+        padding: '2rem',
+        maxWidth: '480px',
+        margin: '2rem auto',
+        backgroundColor: '#fff',
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
+        fontFamily: 'Arial, sans-serif'
+      }}>
+        <h1 style={{
+          fontSize: '1.8rem',
+          textAlign: 'center',
+          marginBottom: '1.5rem',
+          color: '#1a1a1a'
+        }}>
+          Pré-inscrição para Olimpíada Brasileira de Física
+        </h1>
+
+        <p style={{ marginBottom: '1.5rem', fontSize: '0.95rem', color: '#4b5563' }}>
+          Este formulário tem como objetivo apenas confirmar os dados e coletar a data de nascimento.
+        </p>
+
+        <input
+          type="text"
+          placeholder="Número de matrícula Ex: 10720******"
+          value={matricula}
+          onChange={(e) => setMatricula(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            fontSize: '1rem',
+            borderRadius: '10px',
+            border: '1px solid #d1d5db',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+            marginBottom: '1rem'
+          }}
+        />
+
+        <button
+          onClick={buscarAluno}
+          style={{
+            width: '100%',
+            backgroundColor: '#2563eb',
+            color: '#fff',
+            padding: '0.9rem',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '1rem',
+            marginBottom: '1rem'
+          }}
+        >
+          Buscar
         </button>
-      )}
-    </div>
+
+        {erro && (
+          <div style={{
+            backgroundColor: '#fee2e2',
+            color: '#b91c1c',
+            padding: '0.75rem',
+            borderRadius: '8px',
+            marginBottom: '1rem'
+          }}>
+            {erro}
+          </div>
+        )}
+
+        {nome && (
+          <div style={{ marginBottom: '1rem', fontSize: '0.95rem' }}>
+            <p><strong>Nome:</strong> {nome}</p>
+            <p><strong>Série:</strong> {serie}</p>
+          </div>
+        )}
+
+        <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '1rem 0' }} />
+
+        <input
+          type="text"
+          placeholder="Data de nascimento (DD/MM/AAAA)"
+          value={dataNascimento}
+          onChange={formatarData}
+          maxLength={10}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            fontSize: '1rem',
+            borderRadius: '10px',
+            border: '1px solid #d1d5db',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+            marginBottom: '1rem'
+          }}
+        />
+
+        <button
+          onClick={salvarFormulario}
+          style={{
+            width: '100%',
+            backgroundColor: '#10b981',
+            color: '#fff',
+            padding: '0.9rem',
+            border: 'none',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '1rem',
+            marginBottom: '1rem'
+          }}
+        >
+          Enviar
+        </button>
+
+        {mensagem && (
+          <div style={{
+            backgroundColor: '#dcfce7',
+            color: '#065f46',
+            padding: '0.75rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            fontWeight: 'bold'
+          }}>
+            {mensagem}
+          </div>
+        )}
+
+        {matricula === '200291' && (
+          <button
+            onClick={exportarCSV}
+            style={{
+              width: '100%',
+              backgroundColor: '#6b7280',
+              color: '#fff',
+              padding: '0.9rem',
+              border: 'none',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '1rem'
+            }}
+          >
+            Exportar para Excel
+          </button>
+        )}
+      </div>
+    </>
   );
 }
 
