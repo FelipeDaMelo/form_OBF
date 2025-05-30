@@ -153,7 +153,9 @@ function App() {
         </h1>
 
         <p style={{ marginBottom: '1.5rem', fontSize: '0.95rem', color: '#4b5563' }}>
-          Este formulário tem como objetivo apenas confirmar os dados e coletar a data de nascimento.
+Este formulário tem como finalidade apenas confirmar suas informações e registrar sua data de nascimento.
+Digite sua matrícula para visualizar seus dados. Em seguida, preencha sua data de nascimento e clique em Enviar para concluir a pré inscrição.
+Caso seu nome, metrícula ou série estiver errado, entre em contato com o professor Felipe no chat do Teams.
         </p>
 
         <input
@@ -277,6 +279,21 @@ function App() {
             Exportar para Excel
           </button>
         )}
+      </div>
+      <div style={{
+        textAlign: 'center',
+        marginTop: '2rem',
+        fontSize: '0.9rem',
+        color: '#374151',
+        background: '#f9fafb',
+        padding: '0.75rem 1rem',
+        borderRadius: '10px',
+        maxWidth: 'fit-content',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.1)'
+      }}>
+        Desenvolvido por Prof. Dr. Felipe Damas Melo
       </div>
     </>
   );
