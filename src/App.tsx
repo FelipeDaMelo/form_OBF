@@ -279,24 +279,14 @@ Caso seu nome, metrícula ou série estiver errado, entre em contato com o profe
             Exportar para Excel
           </button>
         )}
-      </div>
-      <div style={{
-        textAlign: 'center',
-        marginTop: '2rem',
-        fontSize: '0.9rem',
-        color: '#374151',
-        background: '#f9fafb',
-        padding: '0.75rem 1rem',
-        borderRadius: '10px',
-        maxWidth: 'fit-content',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.1)'
-      }}>
+              <footer>
         Desenvolvido por Prof. Dr. Felipe Damas Melo
+      </footer>
       </div>
     </>
+    
   );
+  
 }
 
 export default App;
